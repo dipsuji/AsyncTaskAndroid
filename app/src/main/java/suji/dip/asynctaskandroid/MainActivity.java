@@ -1,6 +1,8 @@
 package suji.dip.asynctaskandroid;
 
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -42,79 +44,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void parseJsonData() {
-
         // get data from server by aysn tas...kkkk
-        new DownloadJSONDataTask().execute("http://time.jsontest.com/");
-
+        new DownloadJSONDataTask(mHandler).execute("http://time.jsontest.com/");
     }
+
 
     /**
-     * asyn task
+     * receive data from handler
      */
-    private class DownloadJSONDataTask extends AsyncTask<String, Integer, String> {
-
+    private final Handler mHandler = new Handler() {
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            Log.d(TAG, "onPreExecute....");
-            //show progress bar
+        public void handleMessage(Message msg) {
+            Log.d(TAG, "handleMessage.......");
+            String string = (String) msg.obj;
+            jsonResultTextView.setText(string);
         }
+    };
 
-        @Override
-        protected String doInBackground(String... strings) {
-            Log.d(TAG, "doInBackground....url " + strings[0]);
-            String response = null;
-            try {
-                // This is getting the url from the string we passed in
-                URL url = new URL(strings[0]);
-                // Create the urlConnection
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setDoInput(true);
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Content-Type", "application/json");
-                urlConnection.setRequestMethod("POST");
-                // OPTIONAL - Sets an authorization header
-                urlConnection.setRequestProperty("Authorization", "someAuthString");
-                // Send the post body
-                int statusCode = urlConnection.getResponseCode();
-                if (statusCode == 200) {
-                    InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                    response = convertInputStreamToString(inputStream);
-                    Log.d(TAG, "response....." + response);
-                    // From here you can convert the string to JSON with whatever JSON parser you like to use
-                    // After converting the string to JSON, I call my custom callback. You can follow this process too, or you can implement the onPostExecute(Result) method
-                } else {
-                    // Status code is not 200
-                    // Do something to handle the error
-                }
-
-            } catch (Exception e) {
-                Log.d(TAG, e.getLocalizedMessage());
-                e.printStackTrace();
-            }
-            return response;
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            super.onPostExecute(response);
-            Log.d(TAG, "onPostExecute....response " + response);
-            //cancel progress bar
-            // show downloaded data on UI
-            jsonResultTextView.setText(response);
-
-        }
-
-        private String convertInputStreamToString(InputStream inputStream) throws IOException {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = "";
-            String result = "";
-            while ((line = bufferedReader.readLine()) != null)
-                result += line;
-
-            inputStream.close();
-            return result;
-
-        }
-    }
 }
